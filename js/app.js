@@ -283,5 +283,8 @@
     party = Object.assign({}, party, { lastPlayerId: null });
     saveParty();
   }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js");
+  }
   render();
 })();
