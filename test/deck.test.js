@@ -209,4 +209,44 @@ test("список пишется в storage и читается обратно"
   assert.deepEqual(playersApi.loadPlayers(memoryStorage({ "buttle.players": "nope" })), []);
 });
 
+const cardsData = require("../cards.js");
+
+function countBucket(group, actor, partner) {
+  return group.filter(function (card) {
+    return card.actor === actor && card.partner === partner;
+  }).length;
+}
+
+test("колода ступеней 1–3 собрана восьмёрками", function () {
+  assert.equal(cardsData.length, 48);
+  const ids = cardsData.map(function (card) { return card.id; });
+  assert.equal(new Set(ids).size, ids.length);
+  ["truth", "dare"].forEach(function (type) {
+    [1, 2, 3].forEach(function (heat) {
+      const group = cardsData.filter(function (card) {
+        return card.type === type && card.heat === heat;
+      });
+      assert.equal(group.length, 8, type + " " + heat);
+      assert.equal(countBucket(group, "any", null), 2);
+      assert.equal(countBucket(group, "any", "m"), 2);
+      assert.equal(countBucket(group, "any", "f"), 2);
+      assert.equal(countBucket(group, "m", null), 1);
+      assert.equal(countBucket(group, "f", null), 1);
+      group.forEach(function (card) {
+        if (card.actor === "any") {
+          assert.equal(typeof card.text.m, "string");
+          assert.equal(typeof card.text.f, "string");
+        } else {
+          assert.equal(typeof card.text[card.actor], "string");
+        }
+        const texts = [card.text.m, card.text.f].filter(Boolean);
+        texts.forEach(function (text) {
+          if (card.partner) assert.ok(text.indexOf("{partner}") !== -1, card.id);
+          else assert.equal(text.indexOf("{partner}"), -1, card.id);
+        });
+      });
+    });
+  });
+});
+
 if (failed > 0) process.exit(1);
