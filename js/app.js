@@ -56,11 +56,23 @@
       var raw = sessionStorage.getItem(PARTY_KEY);
       if (!raw) return null;
       var parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed.heat !== "number" || !Array.isArray(parsed.usedIds)) return null;
+      if (!parsed) return null;
+      if (!Number.isInteger(parsed.heat) || parsed.heat < 1 || parsed.heat > 5) return null;
+      if (!Number.isInteger(parsed.roundsCompleted) || parsed.roundsCompleted < 0) return null;
+      if (parsed.lastPlayerId !== null && typeof parsed.lastPlayerId !== "string") return null;
+      if (!Array.isArray(parsed.usedIds)) return null;
+      for (var i = 0; i < parsed.usedIds.length; i++) {
+        if (typeof parsed.usedIds[i] !== "string") return null;
+      }
       return parsed;
     } catch (error) {
       return null;
     }
+  }
+
+  function newPlayerId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return "p-" + Date.now() + "-" + Math.random();
   }
 
   function screenName() {
@@ -176,7 +188,7 @@
 
   document.querySelector("#player-form").addEventListener("submit", function (event) {
     event.preventDefault();
-    var result = playersApi.addPlayer(players, nameInput.value, draftGender, crypto.randomUUID());
+    var result = playersApi.addPlayer(players, nameInput.value, draftGender, newPlayerId());
     if (result.error) {
       showError(result.error);
       return;
@@ -239,6 +251,11 @@
 
   function openDraw(type) {
     var player = players.find(function (item) { return item.id === sheet.playerId; });
+    if (!player) {
+      sheet = null;
+      render();
+      return;
+    }
     var drawn = deck.drawCard(cards, {
       type: type,
       heat: party.heat,
