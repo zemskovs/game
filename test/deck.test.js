@@ -166,4 +166,47 @@ test("бутылочка делает пять оборотов и доворо�
   assert.equal(spin.bottleRotation(30, 10) % 360, 10);
 });
 
+const playersApi = require("../js/players.js");
+
+function memoryStorage(initial) {
+  const data = Object.assign({}, initial);
+  return {
+    getItem: function (key) {
+      return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null;
+    },
+    setItem: function (key, value) {
+      data[key] = String(value);
+    },
+  };
+}
+
+test("имя обрезается, пустое и длинное отклоняются, дубликат тоже", function () {
+  const list = [{ id: "1", name: "Аня", gender: "f" }];
+  assert.deepEqual(playersApi.validateName("  Боря ", list), { ok: true, name: "Боря" });
+  assert.deepEqual(playersApi.validateName("   ", list), { ok: false, reason: "empty" });
+  assert.deepEqual(playersApi.validateName("Аня", list), { ok: false, reason: "duplicate" });
+  assert.deepEqual(playersApi.validateName("аня", list), { ok: false, reason: "duplicate" });
+  assert.equal(playersApi.validateName("я".repeat(21), list).reason, "long");
+});
+
+test("не больше восьми и только два пола", function () {
+  const full = [1, 2, 3, 4, 5, 6, 7, 8].map(function (n) {
+    return { id: String(n), name: "Игрок " + n, gender: "m" };
+  });
+  assert.equal(playersApi.validateName("Новый", full).reason, "full");
+  const added = playersApi.addPlayer([], "  Кира ", "f", "k");
+  assert.equal(added.error, null);
+  assert.deepEqual(added.players, [{ id: "k", name: "Кира", gender: "f" }]);
+  assert.equal(playersApi.addPlayer([], "Кира", "x", "k").error, "gender");
+});
+
+test("список пишется в storage и читается обратно", function () {
+  const storage = memoryStorage();
+  const added = playersApi.addPlayer([], "Марк", "m", "m1");
+  playersApi.savePlayers(storage, added.players);
+  assert.deepEqual(playersApi.loadPlayers(storage), added.players);
+  assert.deepEqual(playersApi.removePlayer(added.players, "m1"), []);
+  assert.deepEqual(playersApi.loadPlayers(memoryStorage({ "buttle.players": "nope" })), []);
+});
+
 if (failed > 0) process.exit(1);
