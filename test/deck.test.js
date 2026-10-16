@@ -217,12 +217,12 @@ function countBucket(group, actor, partner) {
   }).length;
 }
 
-test("колода ступеней 1–3 собрана восьмёрками", function () {
-  assert.equal(cardsData.length, 48);
+test("колода всех ступеней собрана восьмёрками", function () {
+  assert.equal(cardsData.length, 80);
   const ids = cardsData.map(function (card) { return card.id; });
   assert.equal(new Set(ids).size, ids.length);
   ["truth", "dare"].forEach(function (type) {
-    [1, 2, 3].forEach(function (heat) {
+    [1, 2, 3, 4, 5].forEach(function (heat) {
       const group = cardsData.filter(function (card) {
         return card.type === type && card.heat === heat;
       });
