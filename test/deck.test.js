@@ -61,6 +61,68 @@ test("пропуск карточки без нужного партнёра", f
   assert.deepEqual(found.map((card) => card.id).sort(), ["keep", "man-only", "needs-man"]);
 });
 
+test("в смешанной компании партнёр противоположного пола", function () {
+  const mixed = [
+    { id: "solo", type: "truth", heat: 1, actor: "any", partner: null, text: { m: "Одна", f: "Одна" } },
+    { id: "same-woman", type: "truth", heat: 1, actor: "any", partner: "f", text: { m: "Она {partner}", f: "Она {partner}" } },
+    { id: "same-man", type: "truth", heat: 1, actor: "any", partner: "m", text: { m: "Он {partner}", f: "Он {partner}" } },
+  ];
+  const forWoman = deck.drawCard(mixed, {
+    type: "truth",
+    heat: 1,
+    actorGender: "f",
+    players,
+    actorId: "a",
+    usedIds: ["solo"],
+    random: sequence([0, 0]),
+  });
+  assert.equal(forWoman.id, "same-man");
+  assert.equal(forWoman.partnerId, "b");
+  const forMan = deck.drawCard(mixed, {
+    type: "truth",
+    heat: 1,
+    actorGender: "m",
+    players,
+    actorId: "b",
+    usedIds: ["solo"],
+    random: sequence([0, 0]),
+  });
+  assert.equal(forMan.id, "same-woman");
+  assert.equal(forMan.partnerId, "a");
+});
+
+test("свой пол остаётся, если противоположного партнёра взять нельзя", function () {
+  const women = [
+    { id: "a", name: "Аня", gender: "f" },
+    { id: "c", name: "Вера", gender: "f" },
+  ];
+  const sameOnly = [
+    { id: "same", type: "truth", heat: 1, actor: "any", partner: "f", text: { m: "Она {partner}", f: "Она {partner}" } },
+  ];
+  const singleGender = deck.drawCard(sameOnly, {
+    type: "truth",
+    heat: 1,
+    actorGender: "f",
+    players: women,
+    actorId: "a",
+    usedIds: [],
+    random: sequence([0, 0]),
+  });
+  assert.equal(singleGender.id, "same");
+  assert.equal(singleGender.partnerId, "c");
+  const noOppositeCard = deck.drawCard(sameOnly, {
+    type: "truth",
+    heat: 1,
+    actorGender: "f",
+    players,
+    actorId: "a",
+    usedIds: [],
+    random: sequence([0, 0]),
+  });
+  assert.equal(noOppositeCard.id, "same");
+  assert.ok(noOppositeCard.partnerId === "c");
+});
+
 test("подстановка имени партнёра", function () {
   const drawn = deck.drawCard(cards, {
     type: "truth",

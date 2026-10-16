@@ -1,4 +1,4 @@
-var CACHE = "buttle-v9";
+var CACHE = "buttle-v11";
 var ASSETS = [
   "./",
   "./index.html",

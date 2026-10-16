@@ -25,6 +25,24 @@
     });
   }
 
+  function companyHasBothGenders(players) {
+    let men = false;
+    let women = false;
+    players.forEach(function (player) {
+      if (player.gender === "m") men = true;
+      if (player.gender === "f") women = true;
+    });
+    return men && women;
+  }
+
+  function preferOppositePartner(eligible, query) {
+    if (!companyHasBothGenders(query.players)) return eligible;
+    const preferred = eligible.filter(function (card) {
+      return !card.partner || card.partner !== query.actorGender;
+    });
+    return preferred.length > 0 ? preferred : eligible;
+  }
+
   function pick(list, random) {
     return list[Math.floor(random() * list.length)];
   }
@@ -39,7 +57,7 @@
   }
 
   function drawCard(cards, query) {
-    const eligible = eligibleCards(cards, query);
+    const eligible = preferOppositePartner(eligibleCards(cards, query), query);
     if (eligible.length === 0) return { status: "empty", usedIds: query.usedIds.slice() };
     const eligibleIds = {};
     eligible.forEach(function (card) { eligibleIds[card.id] = true; });
