@@ -1,4 +1,4 @@
-var CACHE = "buttle-shell";
+var CACHE = "buttle-shell-2";
 var NETWORK_TIMEOUT = 4000;
 var ASSETS = [
   "./",
@@ -10,10 +10,12 @@ var ASSETS = [
   "./js/deck.js",
   "./js/spin.js",
   "./js/app.js",
-  "./fonts/cormorant-garamond-cyrillic.woff2",
-  "./fonts/cormorant-garamond-latin.woff2",
   "./fonts/manrope-cyrillic.woff2",
   "./fonts/manrope-latin.woff2",
+  "./fonts/manrope-cyrillic-600.woff2",
+  "./fonts/manrope-latin-600.woff2",
+  "./fonts/manrope-cyrillic-700.woff2",
+  "./fonts/manrope-latin-700.woff2",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-192.png",
