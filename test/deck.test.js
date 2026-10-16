@@ -78,7 +78,7 @@ test("подстановка имени партнёра", function () {
   assert.deepEqual(drawn.usedIds, ["keep", "needs-woman", "needs-man"]);
 });
 
-test("повтор после исчерпания группы", function () {
+test("после исчерпания группы недавняя карточка остаётся в стороне", function () {
   const drawn = deck.drawCard(
     [
       { id: "a1", type: "truth", heat: 1, actor: "any", partner: null, text: { m: "А", f: "А" } },
@@ -96,7 +96,49 @@ test("повтор после исчерпания группы", function () {
     }
   );
   assert.equal(drawn.id, "a1");
-  assert.deepEqual(drawn.usedIds, ["other", "a1"]);
+  assert.deepEqual(drawn.usedIds, ["a2", "other", "a1"]);
+});
+
+test("подряд не выпадает только что сыгранная карточка, пока есть другие", function () {
+  const pool = ["a", "b", "c", "d"].map(function (id) {
+    return { id: id, type: "truth", heat: 1, actor: "any", partner: null, text: { m: id, f: id } };
+  });
+  let usedIds = [];
+  let previous = null;
+  const seen = [];
+  for (let step = 0; step < 8; step += 1) {
+    const drawn = deck.drawCard(pool, {
+      type: "truth",
+      heat: 1,
+      actorGender: "m",
+      players,
+      actorId: "b",
+      usedIds: usedIds,
+      random: function () { return 0; },
+    });
+    assert.notEqual(drawn.id, previous);
+    previous = drawn.id;
+    usedIds = drawn.usedIds;
+    seen.push(drawn.id);
+  }
+  assert.deepEqual(seen, ["a", "b", "c", "d", "a", "b", "c", "d"]);
+});
+
+test("единственная карточка может повториться", function () {
+  const drawn = deck.drawCard(
+    [{ id: "solo", type: "truth", heat: 1, actor: "any", partner: null, text: { m: "Одна", f: "Одна" } }],
+    {
+      type: "truth",
+      heat: 1,
+      actorGender: "m",
+      players,
+      actorId: "b",
+      usedIds: ["solo"],
+      random: sequence([0]),
+    }
+  );
+  assert.equal(drawn.id, "solo");
+  assert.deepEqual(drawn.usedIds, ["solo"]);
 });
 
 test("пустая группа", function () {
@@ -113,10 +155,13 @@ test("пустая группа", function () {
   assert.deepEqual(drawn.usedIds, []);
 });
 
-test("накал растёт на каждый второй ход и останавливается на 5", function () {
-  assert.deepEqual(deck.heatAfterDone(1, 0), { heat: 1, roundsCompleted: 1 });
-  assert.deepEqual(deck.heatAfterDone(1, 1), { heat: 2, roundsCompleted: 2 });
-  assert.deepEqual(deck.heatAfterDone(5, 1), { heat: 5, roundsCompleted: 2 });
+test("накал растёт раз в ход на каждого игрока и останавливается на 5", function () {
+  assert.deepEqual(deck.heatAfterDone(1, 0, 3), { heat: 1, roundsCompleted: 1 });
+  assert.deepEqual(deck.heatAfterDone(1, 1, 3), { heat: 1, roundsCompleted: 2 });
+  assert.deepEqual(deck.heatAfterDone(1, 2, 3), { heat: 2, roundsCompleted: 3 });
+  assert.deepEqual(deck.heatAfterDone(1, 1, 2), { heat: 2, roundsCompleted: 2 });
+  assert.deepEqual(deck.heatAfterDone(1, 7, 8), { heat: 2, roundsCompleted: 8 });
+  assert.deepEqual(deck.heatAfterDone(5, 1, 2), { heat: 5, roundsCompleted: 2 });
   assert.equal(deck.shiftHeat(1, -1), 1);
   assert.equal(deck.shiftHeat(5, 1), 5);
   assert.equal(deck.shiftHeat(3, -1), 2);
@@ -217,8 +262,8 @@ function countBucket(group, actor, partner) {
   }).length;
 }
 
-test("колода всех ступеней собрана восьмёрками", function () {
-  assert.equal(cardsData.length, 80);
+test("колода собрана восьмёрками, на пятой ступени их три", function () {
+  assert.equal(cardsData.length, 112);
   const ids = cardsData.map(function (card) { return card.id; });
   assert.equal(new Set(ids).size, ids.length);
   ["truth", "dare"].forEach(function (type) {
@@ -226,12 +271,13 @@ test("колода всех ступеней собрана восьмёркам
       const group = cardsData.filter(function (card) {
         return card.type === type && card.heat === heat;
       });
-      assert.equal(group.length, 8, type + " " + heat);
-      assert.equal(countBucket(group, "any", null), 2);
-      assert.equal(countBucket(group, "any", "m"), 2);
-      assert.equal(countBucket(group, "any", "f"), 2);
-      assert.equal(countBucket(group, "m", null), 1);
-      assert.equal(countBucket(group, "f", null), 1);
+      const sets = heat === 5 ? 3 : 1;
+      assert.equal(group.length, 8 * sets, type + " " + heat);
+      assert.equal(countBucket(group, "any", null), 2 * sets);
+      assert.equal(countBucket(group, "any", "m"), 2 * sets);
+      assert.equal(countBucket(group, "any", "f"), 2 * sets);
+      assert.equal(countBucket(group, "m", null), sets);
+      assert.equal(countBucket(group, "f", null), sets);
       group.forEach(function (card) {
         if (card.actor === "any") {
           assert.equal(typeof card.text.m, "string");
@@ -245,6 +291,23 @@ test("колода всех ступеней собрана восьмёркам
           else assert.equal(text.indexOf("{partner}"), -1, card.id);
         });
       });
+    });
+  });
+});
+
+test("тексты мужчины и женщины различаются", function () {
+  cardsData.forEach(function (card) {
+    if (card.actor === "any") assert.notEqual(card.text.m, card.text.f, card.id);
+  });
+  ["truth", "dare"].forEach(function (type) {
+    [1, 2, 3, 4, 5].forEach(function (heat) {
+      const male = cardsData.find(function (card) {
+        return card.type === type && card.heat === heat && card.actor === "m";
+      });
+      const female = cardsData.find(function (card) {
+        return card.type === type && card.heat === heat && card.actor === "f";
+      });
+      assert.notEqual(male.text.m, female.text.f, type + " " + heat);
     });
   });
 });

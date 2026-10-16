@@ -279,7 +279,7 @@
     openDraw(sheet.type);
   });
   document.querySelector("#card-done").addEventListener("click", function () {
-    var next = deck.heatAfterDone(party.heat, party.roundsCompleted);
+    var next = deck.heatAfterDone(party.heat, party.roundsCompleted, players.length);
     party = Object.assign({}, party, next);
     sheet = null;
     saveParty();

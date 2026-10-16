@@ -1,4 +1,4 @@
-var CACHE = "buttle-v1";
+var CACHE = "buttle-v9";
 var ASSETS = [
   "./",
   "./index.html",
@@ -21,6 +21,7 @@ var ASSETS = [
 ];
 
 self.addEventListener("install", function (event) {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(function (cache) {
     return cache.addAll(ASSETS);
   }));

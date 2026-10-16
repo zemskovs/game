@@ -29,6 +29,11 @@
     return list[Math.floor(random() * list.length)];
   }
 
+  function cooldownCount(poolSize) {
+    if (poolSize < 2) return 0;
+    return Math.min(poolSize - 1, Math.max(1, Math.floor(poolSize / 2)));
+  }
+
   function fill(text, partnerName) {
     return text.split("{partner}").join(partnerName);
   }
@@ -41,8 +46,13 @@
     let usedIds = query.usedIds.slice();
     let fresh = eligible.filter(function (card) { return usedIds.indexOf(card.id) === -1; });
     if (fresh.length === 0) {
-      usedIds = usedIds.filter(function (id) { return !eligibleIds[id]; });
-      fresh = eligible;
+      const recent = usedIds.filter(function (id) { return eligibleIds[id]; });
+      const blocked = {};
+      recent.slice(recent.length - cooldownCount(recent.length)).forEach(function (id) {
+        blocked[id] = true;
+      });
+      usedIds = usedIds.filter(function (id) { return !eligibleIds[id] || blocked[id]; });
+      fresh = eligible.filter(function (card) { return !blocked[card.id]; });
     }
     const card = pick(fresh, query.random);
     const partners = query.players.filter(function (player) {
@@ -59,10 +69,11 @@
     };
   }
 
-  function heatAfterDone(heat, roundsCompleted) {
+  function heatAfterDone(heat, roundsCompleted, playerCount) {
     const rounds = roundsCompleted + 1;
+    const pace = Math.max(2, Math.min(8, playerCount | 0));
     return {
-      heat: rounds % 2 === 0 ? Math.min(5, heat + 1) : heat,
+      heat: rounds % pace === 0 ? Math.min(5, heat + 1) : heat,
       roundsCompleted: rounds,
     };
   }
