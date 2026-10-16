@@ -301,7 +301,13 @@
     saveParty();
   }
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js");
+    var hadWorker = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+    if (hadWorker) {
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        window.location.reload();
+      });
+    }
   }
   render();
 })();

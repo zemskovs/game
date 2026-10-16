@@ -1,4 +1,5 @@
-var CACHE = "buttle-v11";
+var CACHE = "buttle-shell";
+var NETWORK_TIMEOUT = 4000;
 var ASSETS = [
   "./",
   "./index.html",
@@ -9,7 +10,6 @@ var ASSETS = [
   "./js/deck.js",
   "./js/spin.js",
   "./js/app.js",
-  "./sw.js",
   "./fonts/cormorant-garamond-cyrillic.woff2",
   "./fonts/cormorant-garamond-latin.woff2",
   "./fonts/manrope-cyrillic.woff2",
@@ -20,6 +20,55 @@ var ASSETS = [
   "./icons/icon-maskable-512.png"
 ];
 
+function isStatic(url) {
+  return url.pathname.indexOf("/fonts/") !== -1 || url.pathname.indexOf("/icons/") !== -1;
+}
+
+function store(request, response) {
+  if (!response || !response.ok || response.type !== "basic") return;
+  var copy = response.clone();
+  caches.open(CACHE).then(function (cache) {
+    cache.put(request, copy);
+  });
+}
+
+function fromNetwork(request) {
+  return fetch(request).then(function (response) {
+    store(request, response);
+    return response;
+  });
+}
+
+function networkFirst(request) {
+  return new Promise(function (resolve, reject) {
+    var done = false;
+    var timer = setTimeout(function () {
+      caches.match(request).then(function (cached) {
+        if (cached && !done) {
+          done = true;
+          resolve(cached);
+        }
+      });
+    }, NETWORK_TIMEOUT);
+
+    fromNetwork(request).then(function (response) {
+      clearTimeout(timer);
+      if (!done) {
+        done = true;
+        resolve(response);
+      }
+    }).catch(function () {
+      clearTimeout(timer);
+      caches.match(request).then(function (cached) {
+        if (done) return;
+        done = true;
+        if (cached) resolve(cached);
+        else reject();
+      });
+    });
+  });
+}
+
 self.addEventListener("install", function (event) {
   self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then(function (cache) {
@@ -29,18 +78,38 @@ self.addEventListener("install", function (event) {
 
 self.addEventListener("activate", function (event) {
   event.waitUntil(caches.keys().then(function (keys) {
+    var replaced = keys.some(function (key) {
+      return key !== CACHE;
+    });
     return Promise.all(keys.filter(function (key) {
       return key !== CACHE;
     }).map(function (key) {
       return caches.delete(key);
-    }));
-  }).then(function () {
-    return self.clients.claim();
+    })).then(function () {
+      return self.clients.claim().then(function () {
+        if (!replaced) return;
+        return self.clients.matchAll({ type: "window" }).then(function (clients) {
+          clients.forEach(function (client) {
+            if (client.navigate && client.url) client.navigate(client.url);
+          });
+        });
+      });
+    });
   }));
 });
 
 self.addEventListener("fetch", function (event) {
-  event.respondWith(caches.match(event.request).then(function (cached) {
-    return cached || fetch(event.request);
-  }));
+  var request = event.request;
+  if (request.method !== "GET") return;
+  var url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (isStatic(url)) {
+    event.respondWith(caches.match(request).then(function (cached) {
+      return cached || fromNetwork(request);
+    }));
+    return;
+  }
+
+  event.respondWith(networkFirst(request));
 });

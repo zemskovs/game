@@ -324,8 +324,8 @@ function countBucket(group, actor, partner) {
   }).length;
 }
 
-test("колода собрана восьмёрками, на пятой ступени их три", function () {
-  assert.equal(cardsData.length, 112);
+test("колода собрана восьмёрками", function () {
+  assert.equal(cardsData.length, 144);
   const ids = cardsData.map(function (card) { return card.id; });
   assert.equal(new Set(ids).size, ids.length);
   ["truth", "dare"].forEach(function (type) {
@@ -333,7 +333,11 @@ test("колода собрана восьмёрками, на пятой сту
       const group = cardsData.filter(function (card) {
         return card.type === type && card.heat === heat;
       });
-      const sets = heat === 5 ? 3 : 1;
+      const sets = type === "dare" && heat === 5 ? 4
+        : heat === 5 ? 3
+        : type === "dare" && heat === 2 ? 3
+        : type === "dare" && heat === 1 ? 2
+        : 1;
       assert.equal(group.length, 8 * sets, type + " " + heat);
       assert.equal(countBucket(group, "any", null), 2 * sets);
       assert.equal(countBucket(group, "any", "m"), 2 * sets);
