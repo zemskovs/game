@@ -132,4 +132,38 @@ test("новая партия и названия ступеней", function ()
   assert.deepEqual(deck.HEAT_NAMES, [null, "невинно", "флирт", "смелее", "откровенно", "без тормозов"]);
 });
 
+const spin = require("../js/spin.js");
+
+function near(actual, expected) {
+  assert.ok(Math.abs(actual - expected) < 0.000001, actual + " ~= " + expected);
+}
+
+test("места по кругу: первый сверху, дальше по часовой", function () {
+  assert.equal(spin.seatAngle(0, 4), 0);
+  assert.equal(spin.seatAngle(1, 4), 90);
+  const top = spin.seatPoint(0, 4, 100);
+  const right = spin.seatPoint(1, 4, 100);
+  near(top.x, 0);
+  near(top.y, -100);
+  near(right.x, 100);
+  near(right.y, 0);
+});
+
+test("три и больше игроков не повторяют предыдущего", function () {
+  assert.equal(spin.nextPlayerIndex(3, 0, function () { return 0; }), 1);
+  assert.equal(spin.nextPlayerIndex(4, null, function () { return 0.5; }), 2);
+});
+
+test("двое игроков могут выпасть повторно", function () {
+  assert.equal(spin.nextPlayerIndex(2, 0, function () { return 0; }), 0);
+  assert.equal(spin.nextPlayerIndex(2, 0, function () { return 0.6; }), 1);
+});
+
+test("бутылочка делает пять оборотов и доворот", function () {
+  assert.equal(spin.bottleRotation(0, 0) % 360, 0);
+  assert.equal(spin.bottleRotation(0, 0), 1800);
+  assert.equal(spin.bottleRotation(10, 20), 1820);
+  assert.equal(spin.bottleRotation(30, 10) % 360, 10);
+});
+
 if (failed > 0) process.exit(1);
