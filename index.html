@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14090c">
+  <title>Бутылочка</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app">
+    <section id="screen-age" class="screen">
+      <p class="eyebrow">18+</p>
+      <h1>Бутылочка</h1>
+      <p class="lead">Игра для взрослых. За столом только те, кому уже есть 18.</p>
+      <button type="button" id="age-ok" class="button">Мне есть 18</button>
+    </section>
+
+    <section id="screen-players" class="screen" hidden>
+      <p class="eyebrow">Компания</p>
+      <h1>Кто за столом</h1>
+      <form id="player-form" class="player-form">
+        <label class="field">
+          <span>Имя</span>
+          <input id="player-name" name="name" maxlength="20" autocomplete="off" placeholder="Имя">
+        </label>
+        <div class="gender" role="group" aria-label="Пол">
+          <button type="button" id="gender-m" class="chip is-on" aria-pressed="true">мужчина</button>
+          <button type="button" id="gender-f" class="chip" aria-pressed="false">женщина</button>
+        </div>
+        <p id="player-error" class="error" hidden></p>
+        <button type="submit" class="button">Добавить</button>
+      </form>
+      <ul id="player-list" class="player-list"></ul>
+      <button type="button" id="start-game" class="button" disabled>Начать</button>
+      <p id="install-hint" class="hint" hidden>Чтобы поставить на телефон: меню браузера → «Добавить на главный экран» или «Установить приложение».</p>
+    </section>
+
+    <section id="screen-table" class="screen" hidden>
+      <header class="heat">
+        <button type="button" id="heat-down" class="chip">тише</button>
+        <div>
+          <p id="heat-name" class="heat-name">невинно</p>
+          <p id="heat-pips" class="pips" aria-hidden="true"></p>
+        </div>
+        <button type="button" id="heat-up" class="chip">жарче</button>
+      </header>
+      <div class="ring">
+        <div id="seats" class="seats"></div>
+        <div class="felt"></div>
+        <div id="bottle" class="bottle" aria-hidden="true">
+          <svg viewBox="0 0 80 220" width="46" height="150">
+            <rect x="30" y="8" width="20" height="28" rx="4" fill="#d4b483"></rect>
+            <rect x="34" y="34" width="12" height="36" rx="4" fill="#e8d6be"></rect>
+            <ellipse cx="40" cy="132" rx="28" ry="62" fill="#e8d6be"></ellipse>
+            <ellipse cx="40" cy="124" rx="16" ry="36" fill="#c4a574" opacity="0.35"></ellipse>
+          </svg>
+        </div>
+      </div>
+      <button type="button" id="spin" class="button">Крутить</button>
+      <button type="button" id="leave" class="text-button">К игрокам</button>
+      <div id="sheet" class="sheet" hidden>
+        <p id="sheet-name" class="sheet-name"></p>
+        <div id="sheet-choice" class="sheet-actions">
+          <button type="button" id="pick-truth" class="button">Правда</button>
+          <button type="button" id="pick-dare" class="button button-ghost">Действие</button>
+        </div>
+        <div id="sheet-card" hidden>
+          <p id="sheet-text" class="sheet-text"></p>
+          <div class="sheet-actions">
+            <button type="button" id="card-another" class="button button-ghost">Другое</button>
+            <button type="button" id="card-done" class="button">Готово</button>
+          </div>
+        </div>
+        <div id="sheet-empty" hidden>
+          <p class="sheet-text">На этой ступени для такой компании нет карточек</p>
+          <button type="button" id="empty-close" class="button">К столу</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="./cards.js"></script>
+  <script src="./js/players.js"></script>
+  <script src="./js/deck.js"></script>
+  <script src="./js/spin.js"></script>
+</body>
+</html>
