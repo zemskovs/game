@@ -1,4 +1,4 @@
-var CACHE = "buttle-shell-2";
+var CACHE = "buttle-shell-4";
 var NETWORK_TIMEOUT = 4000;
 var ASSETS = [
   "./",
@@ -19,7 +19,9 @@ var ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-192.png",
-  "./icons/icon-maskable-512.png"
+  "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon.png",
+  "./icons/mark.svg"
 ];
 
 function isStatic(url) {

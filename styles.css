@@ -82,8 +82,30 @@ body::before {
   gap: 20px;
   min-height: calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
-#screen-age #age-ok,
 #screen-players #start-game { margin-top: auto; }
+#screen-age {
+  align-items: center;
+  text-align: center;
+  gap: 0;
+}
+.mark {
+  width: 88px;
+  height: auto;
+  margin-top: auto;
+  margin-bottom: 28px;
+  filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.35));
+}
+.launch-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: auto;
+}
+#screen-age .eyebrow + h1,
+#screen-age h1 + .lead { margin-top: 0; }
+#screen-age .lead { max-width: 16em; }
+#screen-age #age-ok { width: 100%; margin-top: 28px; }
 #screen-table { justify-content: center; }
 h1 {
   margin: 0;
@@ -256,8 +278,16 @@ h1 + .lead { margin-top: -8px; }
   position: absolute;
   left: 50%;
   top: 50%;
+  width: 28%;
+  aspect-ratio: 100 / 180;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+  filter: drop-shadow(0 14px 12px rgba(0, 0, 0, 0.42));
+}
+.bottle img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .seats { position: absolute; inset: 0; }
 .seat {
